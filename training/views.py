@@ -55,28 +55,31 @@ def train_activity(request, user_activity_id):
             status = status.HTTP_404_NOT_FOUND
         )
     
-    # if the activity does not belong to user, returns 403
+    # if the activity does not belong to user, it returns 403
     if user_activity.user != request.user:
         return Response(            
             status = status.HTTP_403_FORBIDDEN
         )
     
-    # if the activity has already completed, returns 400
+    # if the activity has already completed, it returns 400
     if user_activity.completed:
         return Response(            
             status = status.HTTP_400_BAD_REQUEST
         )
     
+    # if the activity log is not created, it returns 400
     if UserActivityLog.objects.filter(user_activity__id = user_activity_id).count() == 0:
         return Response(
             status = status.HTTP_400_BAD_REQUEST
         )    
     
+    # update the log
     log = UserActivityLog.objects.get(user_activity__id = user_activity_id)
     log.score = do_training()
     log.ended_at = datetime.now()
     log.save()
 
+    # update the user activity
     user_activity.completed = True
     user_activity.save()
 
