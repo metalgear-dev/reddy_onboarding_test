@@ -56,3 +56,7 @@ class UserActivityLogSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class LeaderBoardSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    total_score = serializers.IntegerField()
+    username = serializers.StringRelatedField()

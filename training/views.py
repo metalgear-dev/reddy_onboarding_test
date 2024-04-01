@@ -3,7 +3,7 @@ from django.shortcuts import render
 from rest_framework import generics, mixins, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from .serializers import ActivitySerializer, UserActivityLogSerializer, UserActivitySerializer
+from .serializers import ActivitySerializer, LeaderBoardSerializer, UserActivityLogSerializer, UserActivitySerializer
 from .models import Activity, UserActivity, UserActivityLog, do_training
 from rest_framework.decorators import permission_classes, api_view
 from django.db.models import Sum, F
@@ -98,4 +98,9 @@ def leader_board(request):
         annotate(id = F('user_activity__user__id')). \
         order_by('-total_score') \
         
-    return Response(logs)
+    return Response(
+        LeaderBoardSerializer(
+            logs,
+            many = True
+        ).data
+    )
