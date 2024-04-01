@@ -1,9 +1,11 @@
+from datetime import datetime
 from django.shortcuts import render
 from rest_framework import generics, mixins, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .serializers import ActivitySerializer, UserActivityLogSerializer, UserActivitySerializer
-from .models import Activity, UserActivity, UserActivityLog
+from .models import Activity, UserActivity, UserActivityLog, do_training
+from rest_framework.decorators import permission_classes, api_view
 
 # Create your views here.
 
@@ -41,3 +43,43 @@ class UserActivityLogView(generics.GenericAPIView):
 
     def get_queryset(self, request):
         return UserActivityLog.objects.filter(user_activity__user = request.user).order_by('-created_at')
+    
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def train_activity(request, user_activity_id):
+    try:
+        user_activity = UserActivity.objects.get(pk = user_activity_id)
+    except UserActivity.DoesNotExist:
+        return Response(
+            status = status.HTTP_404_NOT_FOUND
+        )
+    
+    # if the activity does not belong to user, returns 403
+    if user_activity.user != request.user:
+        return Response(            
+            status = status.HTTP_403_FORBIDDEN
+        )
+    
+    # if the activity has already completed, returns 400
+    if user_activity.completed:
+        return Response(            
+            status = status.HTTP_400_BAD_REQUEST
+        )
+    
+    if UserActivityLog.objects.filter(user_activity__id = user_activity_id).count() == 0:
+        return Response(
+            status = status.HTTP_400_BAD_REQUEST
+        )    
+    
+    log = UserActivityLog.objects.get(user_activity__id = user_activity_id)
+    log.score = do_training()
+    log.ended_at = datetime.now()
+    log.save()
+
+    user_activity.completed = True
+    user_activity.save()
+
+    return Response(
+        UserActivityLogSerializer(log).data
+    )

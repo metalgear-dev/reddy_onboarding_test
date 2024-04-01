@@ -39,6 +39,7 @@ class UserActivitySerializer(serializers.ModelSerializer):
                 # TODO: check if there is any activity created and not finished
 
                 new_user_activity = UserActivity.objects.create(user = user, activity = activity)
+                UserActivityLog.objects.create(user_activity = new_user_activity, score = 0, ended_at = None)
                 return new_user_activity
             except:
                 return serializers.ValidationError('Activity is not found')
