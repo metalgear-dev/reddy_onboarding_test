@@ -20,10 +20,12 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from training.views import leader_board
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/token', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/training/', include("training.urls"))
+    path('api/training/', include("training.urls")),
+    path('leader_board', leader_board, name='leader_board')
 ]

@@ -3,6 +3,8 @@ from django.shortcuts import render
 from rest_framework import generics, mixins, status
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+
+from training.tables import LeaderBoard
 from .serializers import ActivitySerializer, LeaderBoardSerializer, UserActivityLogSerializer, UserActivitySerializer
 from .models import Activity, UserActivity, UserActivityLog, do_training
 from rest_framework.decorators import permission_classes, api_view
@@ -88,19 +90,23 @@ def train_activity(request, user_activity_id):
         UserActivityLogSerializer(log).data
     )
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
 def leader_board(request):
     logs = UserActivityLog.objects. \
         values('user_activity__user'). \
         annotate(total_score = Sum('score')). \
         annotate(username = F('user_activity__user__username')). \
         annotate(id = F('user_activity__user__id')). \
-        order_by('-total_score') \
+        order_by('-total_score')
         
-    return Response(
-        LeaderBoardSerializer(
-            logs,
-            many = True
-        ).data
+    return render(
+        request,
+        "leader_board.html",
+        {
+            'table': LeaderBoard(
+                LeaderBoardSerializer(
+                    logs,
+                    many = True
+                ).data
+            )
+        }        
     )
